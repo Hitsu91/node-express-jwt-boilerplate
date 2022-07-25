@@ -13,8 +13,8 @@ app.use(deserializeUser);
 
 app.use(router);
 
-const port = config.get('port');
+const port = config.get<number>('port');
 app.listen(port, () => {
-  log.info(`App started at http://localhost:${port}`);
+  log.info(`App running at port: ${port}`);
   connectToDb();
 });

@@ -1,19 +1,69 @@
-import logger from 'pino';
-
 import config from 'config';
 import dayjs from 'dayjs';
 
-const level = config.get<string>('logLevel');
+enum LogLevel {
+  info = 'info',
+  warn = 'warn',
+  error = 'error',
+  debug = 'debug',
+}
 
-const log = logger({
-  transport: {
-    target: 'pino-pretty',
-  },
-  level,
-  base: {
-    pid: false,
-  },
-  timestamp: () => `,"time":"${dayjs().format()}"`,
-});
+const LogEmoji: { [key in LogLevel]: string } = {
+  [LogLevel.info]: '🟢',
+  [LogLevel.warn]: '🟠',
+  [LogLevel.error]: '🔴',
+  [LogLevel.debug]: '🔵',
+};
+
+type LogFn = (message: string, ...params: any[]) => void;
+
+interface ILogger {
+  info: LogFn;
+  warn: LogFn;
+  error: LogFn;
+  debug: LogFn;
+}
+
+function createLogMessage(
+  type: LogLevel,
+  message: string,
+  ...params: object[]
+): string {
+  return `${LogEmoji[type]} [${type.toUpperCase()}] ${dayjs().format(
+    'YYYY-MM-DD:hh:mm:ss'
+  )} ${message} ${params.map((p) => JSON.stringify(p)).join(' ')}`;
+}
+
+type PrintFn = (message: string) => void;
+
+function createLogFn(print: PrintFn, type: LogLevel): LogFn {
+  return (message: string, ...params: any[]) => {
+    print(createLogMessage(type, message, ...params));
+  };
+}
+
+class Logger implements ILogger {
+  info: LogFn = () => {};
+  warn: LogFn = () => {};
+  error: LogFn = () => {};
+  debug: LogFn = () => {};
+
+  constructor(logLevel: LogLevel) {
+    switch (logLevel) {
+      case 'info':
+        this.info = createLogFn(console.info, LogLevel.info);
+      case 'warn':
+        this.warn = createLogFn(console.warn, LogLevel.warn);
+      case 'error':
+        this.error = createLogFn(console.error, LogLevel.error);
+      case 'debug':
+        this.debug = createLogFn(console.debug, LogLevel.debug);
+    }
+  }
+}
+
+const logLevel = config.get<LogLevel>('logLevel');
+
+const log: ILogger = new Logger(logLevel);
 
 export default log;
