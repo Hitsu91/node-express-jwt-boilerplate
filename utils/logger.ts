@@ -15,7 +15,7 @@ const LogEmoji: { [key in LogLevel]: string } = {
   [LogLevel.debug]: '🔵',
 };
 
-type LogFn = (message: string, ...params: any[]) => void;
+type LogFn = (...params: any[]) => void;
 
 interface ILogger {
   info: LogFn;
@@ -24,21 +24,17 @@ interface ILogger {
   debug: LogFn;
 }
 
-function createLogMessage(
-  type: LogLevel,
-  message: string,
-  ...params: object[]
-): string {
+function createLogMessage(type: LogLevel, ...params: object[]): string {
   return `${LogEmoji[type]} [${type.toUpperCase()}] ${dayjs().format(
     'YYYY-MM-DD:hh:mm:ss'
-  )} ${message} ${params.map((p) => JSON.stringify(p)).join(' ')}`;
+  )} ${params.map((p) => JSON.stringify(p)).join(' ')}`;
 }
 
-type PrintFn = (message: string) => void;
+type PrintFn = (...data: any) => void;
 
 function createLogFn(print: PrintFn, type: LogLevel): LogFn {
   return (message: string, ...params: any[]) => {
-    print(createLogMessage(type, message, ...params));
+    print(createLogMessage(type, ...params));
   };
 }
 

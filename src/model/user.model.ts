@@ -8,6 +8,7 @@ import {
 } from '@typegoose/typegoose';
 import argon2 from 'argon2';
 import { nanoid } from 'nanoid';
+import log from '../../utils/logger';
 
 @pre<User>('save', async function () {
   if (!this.isModified('password')) {
@@ -50,6 +51,7 @@ export class User {
     try {
       return await argon2.verify(this.password, candicatePassword);
     } catch (e) {
+      log.error(e, 'Could not validate password');
       return false;
     }
   }
